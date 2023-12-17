@@ -1,1 +1,439 @@
-// реализация функций и классов для вычисления арифметических выражений
+// реализация функций и классов для вычис1ления арифметических выражений
+
+#include <iostream>
+#include <cmath>
+#include "arithmetic.h"
+
+void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
+{
+	int i = 0; // counter of string
+	Stack<char> Brackets; // will be used in check of brackets
+	Lexem* L;
+	while (s[i] != '\0')
+	{
+		// switch version
+		L = new Lexem;
+		switch (s[i]) {
+		case '+':
+			if (i == 0) {
+				std::cout << "Sign '+' can't be on the first place!" << std::endl;
+				throw "sign_first_error";
+			}
+			if (s[i + 1] == '\0') {
+				std::cout << "Sign '+' can't be on the last place!" << std::endl;
+				throw "sign_last_error";
+			}
+			if (s[i + 1] == '+' || s[i + 1] == '-' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')' || s[i + 1] == '.') {
+				std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+				throw "signs_near_error";
+			}
+			L->op = '+';
+			break;
+
+		case '-':
+			if (s[i + 1] == '\0') {
+				std::cout << "Sign '-' can't be on the last place!" << std::endl;
+				throw "sign_last_error";
+			}
+			if (s[i + 1] == '+' || s[i + 1] == '-' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')' || s[i + 1] == '.') {
+				std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+				throw "signs_near_error";
+			}
+			if ((s[i + 1] >= '0' && s[i + 1] <= '9') && (i == 0 || s[i - 1] == '(')) { // check of negative numbers
+				L->IsNumb = true;
+				i++;
+				L->numb = (-1) * double(s[i] - '0');
+				int f = 0; // trigger of first '.' and actual number of numbers after '.'
+				while ((s[i + 1] != '\0') && ((s[i + 1] >= '0' && s[i + 1] <= '9') || (s[i + 1] == '.' && s[i + 2] != '\0'))) {
+					i++;
+					if (s[i] >= '0' && s[i] <= '9') {
+						if (f == 0)
+							L->numb = L->numb * 10 + int(s[i] - '0');
+						else {
+							f++;
+							L->numb = L->numb + int(s[i] - '0') * pow(0.1, f);
+						}
+					}
+					else {
+						if (f != 0) {
+							std::cout << "Expression is wrong! Number of points more than 1. Look at the symbol #" << i << std::endl;
+							throw "more_one_point";
+						}
+						else {
+							if (s[i + 1] == '\0') {
+								std::cout << "Point can't be on the last place!" << std::endl;
+								throw "point_is_last_point";
+							}
+							f++;
+							i++;
+							L->numb = L->numb + 0.1 * int(s[i] - '0');
+						}
+					}
+				}
+			}
+			else
+				L->op = '-';
+			break;
+
+		case '*':
+			if (i == 0) {
+				std::cout << "Sign '*' can't be on the first place!" << std::endl;
+				throw "sign_first_error";
+			}
+			if (s[i + 1] == '\0') {
+				std::cout << "Sign '*' can't be on the last place!" << std::endl;
+				throw "sign_last_error";
+			}
+			if (s[i + 1] == '+' || s[i + 1] == '-' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')' || s[i + 1] == '.') {
+				std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+				throw "signs_near_error";
+			}
+			L->op = '*';
+			break;
+
+		case '/':
+			if (i == 0) {
+				std::cout << "Sign '/' can't be on the first place!" << std::endl;
+				throw "sign_first_error";
+			}
+			if (s[i + 1] == '\0') {
+				std::cout << "Sign '/' can't be on the last place!" << std::endl;
+				throw "sign_last_error";
+			}
+			if (s[i + 1] == '+' || s[i + 1] == '-' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')' || s[i + 1] == '.') {
+				std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+				throw "signs_near_error";
+			}
+			L->op = '/';
+			break;
+
+		case '(':
+			if (s[i + 1] == '\0') {
+				std::cout << "Sign '(' can't be on the last place!" << std::endl;
+				throw "open_bracket_last_error";
+			}
+			if (s[i + 1] == '+' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')' || s[i + 1] == '.') {
+				std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+				throw "signs_near_error";
+			}
+			Brackets.push('(');
+			L->op = '(';
+			break;
+
+		case ')':
+			if (s[i + 1] != '\0' && (s[i + 1] == '(' || s[i + 1] == '.' || (s[i + 1] >= '0' && s[i + 1] <= '9'))) {
+				std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+				throw "signs_near_error";
+			}
+			if (Brackets.IsEmpty()) {
+				std::cout << "Brackets were entered wrong. Look at the symbol #" << i << std::endl;
+				throw "close_bracket_stack_error";
+			}
+			else
+				Brackets.pop();
+			L->op = ')';
+			break;
+
+		default:
+			if (s[i] >= 'a' && s[i] <= 'z') // variable
+				L->var = s[i];
+			else {
+				L->IsNumb = true;
+				if (s[i] >= '0' && s[i] <= '9') { // non negative number
+					L->numb = double(s[i] - '0');
+					int f = 0; // trigger of first '.' and actual number of numbers after '.'
+					while ((s[i + 1] != '\0') && ((s[i + 1] >= '0' && s[i + 1] <= '9') || (s[i + 1] == '.' && s[i + 2] != '\0' && s[i+2] >= '0' && s[i+2] <= '9'))) {
+						i++;
+						if (s[i] >= '0' && s[i] <= '9') {
+							if (f == 0)
+								L->numb = L->numb * 10 + int(s[i] - '0');
+							else {
+								f++;
+								L->numb = L->numb + int(s[i] - '0') * pow(0.1, f);
+							}
+						}
+						else {
+							if (f != 0) {
+								std::cout << "Expression is wrong! Number of points more than 1. Look at the symbol #" << i << std::endl;
+								throw "more_one_point";
+							}
+							else {
+								if (s[i + 1] == '\0') {
+									std::cout << "Point can't be on the last place!" << std::endl;
+									throw "point_is_last_point";
+								}
+								f++;
+								i++;
+								L->numb = L->numb + 0.1 * int(s[i] - '0');
+							}
+						}
+					}
+				}
+				else {
+					std::cout << "Unacceptable symbol was entered! Look at the symbol #" << i << std::endl;
+					throw "unacceptable_symbol";
+				}
+			}
+			break;
+		}
+		data.push_back(*L);
+		i++;
+	}
+
+	if (!Brackets.IsEmpty()) { // open brackets check
+		std::cout << "Brackets were entered wrong. Open brackets more than close ones" << std::endl;
+		throw "open_brackets_error";
+	}
+}
+
+
+void Arithmetic::CreatePostfix() // convert expression to Reverse Polish Notation
+{
+	int rank = -1;
+	Stack<Lexem> tmp;
+	for (int i = 0; i < data.size(); i++) {
+		switch (data[i].op) {
+		case '(':
+			rank = 0;
+			tmp.push(data[i]);
+			break;
+
+		case ')':
+			rank = 1;
+			while (tmp.Top().op != '('){
+				postfix.push_back(tmp.Top());
+				tmp.pop();
+			}
+			tmp.pop();
+			break;
+
+		case '+':
+			if (2 > rank) {
+				tmp.push(data[i]);
+			}
+			else {
+				while (!tmp.IsEmpty()) {
+					postfix.push_back(tmp.Top());
+					tmp.pop();
+				}
+				tmp.push(data[i]);
+			}
+			rank = 2;
+			break;
+
+		case '-':
+			if (2 > rank) {
+				tmp.push(data[i]);
+			}
+			else {
+				while (!tmp.IsEmpty()) {
+					postfix.push_back(tmp.Top());
+					tmp.pop();
+				}
+				tmp.push(data[i]);
+			}
+			rank = 2;
+			break;
+
+		case '*':
+			if (3 > rank) {
+				tmp.push(data[i]);
+			}
+			else {
+				while (!tmp.IsEmpty()) {
+					postfix.push_back(tmp.Top());
+					tmp.pop();
+				}
+				tmp.push(data[i]);
+			}
+			rank = 3;
+			break;
+
+		case '/':
+			if (2 > rank) {
+				tmp.push(data[i]);
+			}
+			else {
+				while (!tmp.IsEmpty()) {
+					postfix.push_back(tmp.Top());
+					tmp.pop();
+				}
+				tmp.push(data[i]);
+			}
+			rank = 3;
+			break;
+
+		default:
+			postfix.push_back(data[i]);
+			break;
+		}
+	}
+	while (!tmp.IsEmpty()) {
+		postfix.push_back(tmp.Top());
+		tmp.pop();
+	}
+}
+
+double Arithmetic::Calculate() // count the result using RPN
+{
+	double t;
+	Stack<double> tmp;
+	for (int i = 0; i < postfix.size(); i++) {
+		if (postfix[i].IsNumb == true)
+			tmp.push(postfix[i].numb);
+		else {
+			if (postfix[i].var != '0') {
+				std::cout << "Enter the value of " << postfix[i].var << ":" << std::endl;
+				std::cin >> t;
+				tmp.push(t);
+			}
+			else {
+				switch (postfix[i].op) {
+				case '+':
+					t = tmp.Top();
+					tmp.pop();
+					t = tmp.Top() + t;
+					tmp.pop();
+					tmp.push(t);
+					break;
+
+				case '-':
+					t = tmp.Top();
+					tmp.pop();
+					t = tmp.Top() - t;
+					tmp.pop();
+					tmp.push(t);
+					break;
+					break;
+
+				case '*':
+					t = tmp.Top();
+					tmp.pop();
+					t = tmp.Top() * t;
+					tmp.pop();
+					tmp.push(t);
+					break;
+					break;
+
+				case '/':
+					t = tmp.Top();
+					if (t == 0) {
+						std::cout << "Devision by 0 is unacceptable!" << std::endl;
+						throw "devision_by_zero";
+					}
+					tmp.pop();
+					t = tmp.Top() / t;
+					tmp.pop();
+					tmp.push(t);
+					break;
+					break;
+
+				default:
+					break;
+				}
+			}
+		}
+	}
+
+	return tmp.Top();
+
+
+	return 0;
+}
+
+int Arithmetic::GetLengthFromData() {
+	return data.size();
+}
+
+Lexem Arithmetic::GetLexemFromPostfix(int pos){
+	return postfix[pos];
+}
+
+int Arithmetic::GetLengthFromPostfix() {
+	return postfix.size();
+}
+
+	/*
+		// if version
+		if (s[i] == '+' || s[i] == '-' || s[i] == '*' || s[i] == '/' || s[i] == '(' || s[i] == ')') { // operator
+			L = new Lexem;
+			if (s[i] == '(') // close brackets check
+				Brackets.push('(');
+			if (s[i] == ')')
+				if (Brackets.IsEmpty()) {
+					std::cout << "Brackets were entered wrong. Look at the symbol #" << i << std::endl;
+					throw "close_brackets_error";
+				}
+				else
+					Brackets.pop();
+
+			if (!((s[i] == '-') && (s[i+1] != '\0') && (s[i+1] >= '0' && s[i+1] <= '9') && (i == 0 || s[i - 1] == '('))) { // check when minus before number in the begining of the expression or part of expression in the brackets
+				if (s[i + 1] != '\0') {
+					if ((s[i] == '+' || s[i] == '-' || s[i] == '*' || s[i] == '/') && (s[i + 1] == '+' || s[i + 1] == '-' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')')) {
+							std::cout << "Sign was entered wrong. Look at the symbol #" << i << std::endl;
+							throw "near_signs_error";
+						}
+					if ((s[i] == '(' && s[i + 1] == ')') || (s[i + 1] == '(' && s[i] == ')')) {
+						std::cout << "Brackets cannot be near each other. Look at the symbol #" << i << std::endl;
+						throw "near_brackets_error";
+					}
+					if (s[i] == '(' && (s[i + 1] == '+' || s[i + 1] == '-' || s[i + 1] == '*' || s[i + 1] == '/' || s[i + 1] == ')')) {
+						std::cout << "Anyone cannot be next to open brackets. Look at the symbol #" << i << std::endl;
+						throw "next_to_open_brackets_error";
+					}
+				}
+				L->op = s[i];
+				data.push_back(*L);
+			}
+		}
+
+		if (s[i] >= 'a' && s[i] <= 'x') { // variable
+			//Lexem L;
+			L.var = s[i];
+			data.push_back(L);
+		}
+
+		if ((s[i] >= '0' && s[i] <= '9')|| ((s[i] == '-') && (s[i + 1] != '\0') && (s[i + 1] >= '0' && s[i + 1] <= '9') && (i == 0 || s[i - 1] == '('))) { // number or minus before number in the begining of the expression or part of expression in the brackets
+			//Lexem L;
+			if ((s[i] == '-') && (s[i + 1] != '\0') && (s[i + 1] >= '0' && s[i + 1] <= '9') && (i == 0 || s[i - 1] == '(')) { // if minus
+				i++;
+				L.numb = (-1) * int(s[i] - '0');
+			}
+			else
+				L.numb = int(s[i] - '0');
+			int f = 0; // trigger of first '.' and actual number of numbers after '.'
+			while ((s[i+1] != '\0') && ((s[i+1] >= '0' && s[i+1] <= '9') || (s[i+1] == '.' && s[i + 2] != '\0'))) {
+				i++;
+				if (s[i] >= '0' && s[i] <= '9')
+					if (f == 0)
+						L.numb = L.numb * 10 + int(s[i] - '0');
+					else {
+						f++;
+						L.numb = L.numb + int(s[i] - '0') * pow(0.1, f);
+					}
+				else
+					if (f != 0) {
+						std::cout << "Expression is wrong! Number of points more than 1. Look at the symbol #" << i << std::endl;
+						throw "more_one_point";
+					}
+					else {
+						f++;
+						i++;
+						L.numb = L.numb + 0.1 * int(s[i] - '0');
+					}
+			}
+		}
+
+		if (!(s[i] == '+' || s[i] == '-' || s[i] == '*' || s[i] == '/' || s[i] == '(' || s[i] == ')') && !(s[i] >= 'a' && s[i] <= 'x') && !(s[i] >= '0' && s[i] <= '9')) {
+			std::cout << "Expression is wrong! Unacceptable symbol was found. Look at the symbol #" << i << std::endl;
+			throw "unacceptable_symbol";
+		}
+
+		i++;
+	}
+
+	if (!Brackets.IsEmpty()) { // open brackets check
+		std::cout << "Brackets were entered wrong. Open brackets more than close ones" << std::endl;
+		throw "open_brackets_error";
+	}
+}*/
