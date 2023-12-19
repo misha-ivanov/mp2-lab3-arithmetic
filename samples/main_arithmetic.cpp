@@ -14,7 +14,7 @@ int main()
 	
 	cout << "Welcome to the calculator based on reverse polish notation!" << endl;
 	while (ans != 'q') {
-		cout << "Please, enter your expression: " << endl;
+		cout << endl << endl << "Please, enter your expression: " << endl;
 		cin >> S;
 		Arithmetic A;
 		i = 0;
@@ -30,14 +30,18 @@ int main()
 			A.CreatePostfix();
 			do {
 				ans = '0';
-				cout << "Answer is " << A.Calculate() << endl;
+				cout << endl << "Answer is " << A.Calculate() << endl << endl;
 				if (f_var == 1) {
-					cout << "Press" << endl << "'a' to enter another expression" << endl << "'c' to change value of variable(s)" << endl << "'q' to finish the programm" << endl;
-					cin >> ans;
+					while ((ans != 'a') && (ans != 'c') && (ans != 'q')) {
+						cout  << "Press" << endl << "'a' to enter another expression" << endl << "'c' to change value of variable(s)" << endl << "'q' to finish the programm" << endl;
+						cin >> ans;
+					}
 				}
 				else {
-					cout << "Press" << endl << "'a' to enter another expression" << endl << "'q' to finish the programm" << endl;
-					cin >> ans;
+					while ((ans != 'a') && (ans != 'q')) {
+						cout << "Press" << endl << "'a' to enter another expression" << endl << "'q' to finish the programm" << endl;
+						cin >> ans;
+					}
 				}
 			} while (ans == 'c' && f_var == 1);
 		}
@@ -49,6 +53,7 @@ int main()
 			}
 		}
 	}
+	cout << endl << "GOODBYE!";
 
   return 0;
 }

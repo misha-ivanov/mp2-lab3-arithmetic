@@ -28,6 +28,7 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 				throw "signs_near_error";
 			}
 			L->op = '+';
+			L->rank = 2;
 			break;
 
 		case '-':
@@ -71,8 +72,10 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 					}
 				}
 			}
-			else
+			else { // if real 'minus'
 				L->op = '-';
+				L->rank = 2;
+			}
 			break;
 
 		case '*':
@@ -89,6 +92,7 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 				throw "signs_near_error";
 			}
 			L->op = '*';
+			L->rank = 3;
 			break;
 
 		case '/':
@@ -105,6 +109,7 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 				throw "signs_near_error";
 			}
 			L->op = '/';
+			L->rank = 3;
 			break;
 
 		case '(':
@@ -118,6 +123,7 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 			}
 			Brackets.push('(');
 			L->op = '(';
+			L->rank = 0;
 			break;
 
 		case ')':
@@ -132,6 +138,7 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 			else
 				Brackets.pop();
 			L->op = ')';
+			L->rank = 1;
 			break;
 
 		default:
@@ -189,82 +196,31 @@ void Arithmetic::Convert(std::string s) // string -> vector<Lexem>
 
 void Arithmetic::CreatePostfix() // convert expression to Reverse Polish Notation
 {
-	int rank = -1;
 	Stack<Lexem> tmp;
 	for (int i = 0; i < data.size(); i++) {
 		switch (data[i].op) {
 		case '(':
-			rank = 0;
 			tmp.push(data[i]);
 			break;
 
 		case ')':
-			rank = 1;
-			while (tmp.Top().op != '('){
+			while (tmp.Top().op != '(') {
 				postfix.push_back(tmp.Top());
 				tmp.pop();
 			}
 			tmp.pop();
 			break;
 
-		case '+':
-			if (2 > rank) {
-				tmp.push(data[i]);
-			}
-			else {
-				while (!tmp.IsEmpty()) {
-					postfix.push_back(tmp.Top());
-					tmp.pop();
-				}
-				tmp.push(data[i]);
-			}
-			rank = 2;
-			break;
-
-		case '-':
-			if (2 > rank) {
-				tmp.push(data[i]);
-			}
-			else {
-				while (!tmp.IsEmpty()) {
-					postfix.push_back(tmp.Top());
-					tmp.pop();
-				}
-				tmp.push(data[i]);
-			}
-			rank = 2;
-			break;
-
-		case '*':
-			if (3 > rank) {
-				tmp.push(data[i]);
-			}
-			else {
-				while (!tmp.IsEmpty()) {
-					postfix.push_back(tmp.Top());
-					tmp.pop();
-				}
-				tmp.push(data[i]);
-			}
-			rank = 3;
-			break;
-
-		case '/':
-			if (2 > rank) {
-				tmp.push(data[i]);
-			}
-			else {
-				while (!tmp.IsEmpty()) {
-					postfix.push_back(tmp.Top());
-					tmp.pop();
-				}
-				tmp.push(data[i]);
-			}
-			rank = 3;
-			break;
-
 		default:
-			postfix.push_back(data[i]);
+			if (data[i].op != '0') {
+				while (!tmp.IsEmpty() && tmp.Top().rank >= data[i].rank) {
+					postfix.push_back(tmp.Top());
+					tmp.pop();
+				}
+				tmp.push(data[i]);
+			}
+			else
+				postfix.push_back(data[i]);
 			break;
 		}
 	}

@@ -172,3 +172,13 @@ TEST(Arithmetic, can_calculate_with_several_brackets)
 
 	EXPECT_EQ(A.Calculate(), -6.0);
 }
+
+TEST(Arithmetic, can_calculate_with_several_multiplications)
+{
+	std::string S = "5+2*3*6-2*3";
+	Arithmetic A;
+	A.Convert(S);
+	A.CreatePostfix();
+
+	EXPECT_EQ(A.Calculate(), 35);
+}
