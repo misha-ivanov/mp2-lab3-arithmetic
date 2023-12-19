@@ -10,7 +10,7 @@ struct Lexem{
 	char var = '0'; // variable
 	char op = '0'; // operator
 	bool IsNumb = false;
-	int rank = -1; // priority of eny element
+	int rank = -1; // priority of any element
 };
 
 class Arithmetic {

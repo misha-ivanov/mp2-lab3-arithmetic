@@ -260,7 +260,6 @@ double Arithmetic::Calculate() // count the result using RPN
 					tmp.pop();
 					tmp.push(t);
 					break;
-					break;
 
 				case '*':
 					t = tmp.Top();
@@ -268,7 +267,6 @@ double Arithmetic::Calculate() // count the result using RPN
 					t = tmp.Top() * t;
 					tmp.pop();
 					tmp.push(t);
-					break;
 					break;
 
 				case '/':
@@ -282,7 +280,6 @@ double Arithmetic::Calculate() // count the result using RPN
 					tmp.pop();
 					tmp.push(t);
 					break;
-					break;
 
 				default:
 					break;
@@ -292,9 +289,6 @@ double Arithmetic::Calculate() // count the result using RPN
 	}
 
 	return tmp.Top();
-
-
-	return 0;
 }
 
 int Arithmetic::GetLengthFromData() {
